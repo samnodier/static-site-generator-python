@@ -1,3 +1,5 @@
+from blocktype import block_to_block_type
+from spliters import markdown_to_blocks
 from textnode import TextNode, TextType
 
 class HTMLNode:
@@ -10,6 +12,7 @@ class HTMLNode:
     def to_html(self):
         raise NotImplementedError("Not implemented. Child classes will overried this method.")
 
+    # turn a dictionary of props to html props
     def props_to_html(self):
         html = ""
         if self.props:
@@ -27,6 +30,7 @@ class HTMLNode:
         else:
             return f"{htmlrepr[:-(len({self.tag})+3)]}{children_repr}</{self.tag}>"
 
+# A leaf node is a node without any other children in it.
 class LeafNode(HTMLNode):
     def __init__(self, tag: str | None = None, value: str | None = None, props: dict[str, str | None] | None = None):
         super().__init__(tag, value, props=props)
@@ -41,6 +45,7 @@ class LeafNode(HTMLNode):
     def __repr__(self):
         return f'<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>'
 
+# A parent node a node with children nodes in it
 class ParentNode(HTMLNode):
     def __init__(self, tag: str | None = None, children: list["HTMLNode"] | None = None, props: dict[str, str | None] | None = None):
         super().__init__(tag, children=children, props=props)
@@ -50,6 +55,9 @@ class ParentNode(HTMLNode):
             raise ValueError("Tag argument is not optional")
         if self.children is None:
             raise ValueError("Children argument is not optional. Parent tag needs children")
+        # Create tags for the parent and recursives call children
+        # This will respectively rerun this function or run the to_html function of the children
+        # POLYMORPHISM Woaahh
         return f'<{self.tag}{self.props_to_html()}>{"\n".join(child.to_html() for child in self.children)}</{self.tag}>'
 
 def text_node_to_html_node(text_node: TextNode):
@@ -68,3 +76,8 @@ def text_node_to_html_node(text_node: TextNode):
             return LeafNode("img", text_node.text, {"src": text_node.url, "alt": text_node.text})
         case _:
             raise ValueError("Invalid TextNode")
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        block_type = block_to_block_type(block)
