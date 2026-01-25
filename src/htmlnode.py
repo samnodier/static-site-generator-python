@@ -109,51 +109,62 @@ def text_node_to_html_node(text_node: TextNode):
 
 # Takes a string text and returns a list of HTMLNode objects
 # Here I think I will use the spliter funciton I created
-def text_to_children(textblock) -> List["HTMLNode"]:
-    if textblock.BlockType == BlockType.PARA:
-        text_nodes = text_to_textnodes(" ".join(textblock.split("\n")))
-        return list(map(text_node_to_html_node, text_nodes))
-    elif textblock.BlockType == BlockType.HDNG:
-        heading = textblock.split("\n", 1)
-        # Count #'s
-        count = 0
-        for char in heading[0]:
-            if char == "#":
-                count += 1
-            else:
-                break
-        text_nodes = text_to_textnodes(f"<h{count}>{heading[0]}</h{count}>")
-        if heading[1]:
-            text_nodes.append(markdown_to_html_node(heading[1]))
-        return list(map(text_node_to_html_node, text_nodes))
-    elif textblock.BlockType == BlockType.QOTE:
-        text_nodes = text_to_textnodes(
-            f'<blockquote>{" ".join(textblock.split("\n"))}</blockquote>'
-        )
-        return list(map(text_node_to_html_node, text_nodes))
-    elif textblock.BlockType == BlockType.UNDL:
-        
-    elif textblock.BlockType == BlockType.ORDL:
+def text_to_children(text, type):
+    html_node = []
+    if type == BlockType.PARA or type == BlockType.QOTE:
+        text_nodes = text_to_textnodes(" ".join(text.split("\n")))
+        html_node = list(map(text_node_to_html_node, text_nodes))
+    elif type == BlockType.HDNG:
+        heading = " ".join(text.split("\n")).lstrip("# ")
+        text_nodes = text_to_textnodes(heading)
+        html_node = list(map(text_node_to_html_node, text_nodes))
+    elif type == BlockType.UNDL or type == BlockType.ORDL:
+        text_nodes = []
+        for list_item in text.split("\n"):
+            parent_node = ("li", text_to_textnodes(list_item[2:]))
+            text_nodes.append(parent_node)
+        html_node = list(map(text_node_to_html_node, text_nodes))
 
+    return html_node
 
 
 
 def markdown_to_html_node(markdown):
+    children_nodes = []
     blocks = markdown_to_blocks(markdown)
     for block in blocks:
         block_type = block_to_block_type(block)
         match block_type:
             case BlockType.PARA:
-                return ParentNode("div", text_to_children(block))
+                nodes = text_to_children(block, BlockType.PARA)
+                parent_p = ParentNode('p', nodes)
+                children_nodes.append(parent_p)
             case BlockType.HDNG:
-                return ParentNode("div", text_to_children(block))
+                count = 0
+                for char in block:
+                    if char == "#":
+                        count += 1
+                    else:
+                        break
+                nodes = text_to_children(block, BlockType.PARA)
+                parent_h = ParentNode(f"h{count}", nodes)
+                children_nodes.append(parent_h)
             case BlockType.QOTE:
-                return ParentNode("div", text_to_children(block))
+                nodes = text_to_children(block, BlockType.PARA)
+                parent_q = ParentNode('blockquote', nodes)
+                children_nodes.append(parent_q)
             case BlockType.CODE:
                 text_node = TextNode(block, TextType.CODE)
-                code_node = text_node_to_html_node(text_node)
-                return ParentNode("div", ParentNode("pre", list(code_node)))
+                nodes = text_node_to_html_node(text_node)
+                parent_c = ParentNode("<pre>", [nodes])
+                children_nodes.append(parent_c)
             case BlockType.UNDL:
-                return ParentNode("div", text_to_children(block))
+                nodes = text_to_children(block, BlockType.PARA)
+                parent_u = ParentNode('ul', nodes)
+                children_nodes.append(parent_u)
             case BlockType.ORDL:
-
+                nodes = text_to_children(block, BlockType.PARA)
+                parent_u = ParentNode('ol', nodes)
+                children_nodes.append(parent_u)
+    parent_block = ParentNode("div", children_nodes)
+    return parent_block

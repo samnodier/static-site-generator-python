@@ -5,7 +5,9 @@ from textnode import TextNode, TextType
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:
-        if not node.text:
+        # grab the node text to use throughout the function without modifying the node
+        node_text = node.text
+        if not node_text:
             break
         if node.text_type is not TextType.TEXT:
             new_nodes.append(node)

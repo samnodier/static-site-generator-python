@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from htmlnode import HTMLNode, LeafNode, ParentNode, text_node_to_html_node
+from htmlnode import HTMLNode, LeafNode, ParentNode, markdown_to_html_node, text_node_to_html_node
 
 class TestHTMLNode(unittest.TestCase):
     def test_eq(self):
@@ -44,6 +44,22 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(html_node.value, "This is a text node")
         self.assertEqual(img_html_node.tag, "img")
         self.assertEqual(img_html_node.props_to_html(), ' src="flower.jpg" alt="A flower close-up"')
+
+    def test_paragraphs(self):
+        md = """
+            This is **bolded** paragraph
+            text in a p
+            tag here
+
+            This is another paragraph with _italic_ text and `code` here
+
+            """
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        )
 
 if __name__ == "__main__":
     unittest.main()
