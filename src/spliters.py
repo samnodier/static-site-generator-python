@@ -1,6 +1,7 @@
 from extractors import extract_markdown_images, extract_markdown_links
 from textnode import TextNode, TextType
 
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:
@@ -20,6 +21,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 else:
                     new_nodes.append(TextNode(splitted_node[i], text_type))
     return new_nodes
+
 
 def split_nodes_image(old_nodes):
     new_nodes = []
@@ -46,11 +48,12 @@ def split_nodes_image(old_nodes):
                     new_nodes.append(TextNode(match[0], TextType.IMAGE, match[1]))
                     if sections[1]:
                         node_text = sections[1]
-                        if i+1 == len(image_matches):
+                        if i + 1 == len(image_matches):
                             # we got to the end of the string there's still more text type available
                             # add it as a text node
                             new_nodes.append(TextNode(node_text, TextType.TEXT))
-    return new_nodes 
+    return new_nodes
+
 
 def split_nodes_link(old_nodes):
     new_nodes = []
@@ -69,32 +72,33 @@ def split_nodes_link(old_nodes):
                 for i in range(len(image_matches)):
                     match = image_matches[i]
                     sections = node_text.split(f"[{match[0]}]({match[1]})", 1)
-                    # if there was text before the link 
+                    # if there was text before the link
                     if sections[0]:
                         new_nodes.append(TextNode(sections[0], TextType.TEXT))
                     # add the link node
                     new_nodes.append(TextNode(match[0], TextType.LINK, match[1]))
                     if sections[1]:
                         node_text = sections[1]
-                        if i+1 == len(image_matches): 
+                        if i + 1 == len(image_matches):
                             # we got to the end of the string there's still more text type available
                             # add it as a text node
                             new_nodes.append(TextNode(node_text, TextType.TEXT))
-    return new_nodes 
+    return new_nodes
+
 
 # Bundle everything together
 # Split any type of text
 def text_to_textnodes(text):
     bold_nodes = split_nodes_delimiter(text, "**", TextType.BOLD)
     italic_nodes = split_nodes_delimiter(bold_nodes, "_", TextType.ITALIC)
-    code_nodes= split_nodes_delimiter(italic_nodes, "`", TextType.CODE)
+    code_nodes = split_nodes_delimiter(italic_nodes, "`", TextType.CODE)
     image_nodes = split_nodes_image(code_nodes)
     link_nodes = split_nodes_link(image_nodes)
     return link_nodes
 
 
 def markdown_to_blocks(markdown):
-    blocks = [] # Create a list to return all MD blocks
+    blocks = []  # Create a list to return all MD blocks
     line_blocks = markdown.split("\n\n")
     for line in line_blocks:
         # If the length of a stripped line is greater than 0 i.e. the line is not empty
