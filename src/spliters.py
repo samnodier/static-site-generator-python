@@ -12,7 +12,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         if node.text_type is not TextType.TEXT:
             new_nodes.append(node)
         else:
-            splitted_node = node.text.split(delimiter)
+            splitted_node = node_text.split(delimiter)
             # if the delimiters do not match.
             # Because if you have an odd number of delimiters you will get even len of the list
             if len(splitted_node) % 2 == 0:
@@ -91,7 +91,8 @@ def split_nodes_link(old_nodes):
 # Bundle everything together
 # Split any type of text
 def text_to_textnodes(text):
-    bold_nodes = split_nodes_delimiter(text, "**", TextType.BOLD)
+    nodes = [TextNode(text, TextType.TEXT)]
+    bold_nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
     italic_nodes = split_nodes_delimiter(bold_nodes, "_", TextType.ITALIC)
     code_nodes = split_nodes_delimiter(italic_nodes, "`", TextType.CODE)
     image_nodes = split_nodes_image(code_nodes)

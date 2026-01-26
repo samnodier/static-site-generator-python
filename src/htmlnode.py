@@ -1,5 +1,3 @@
-import re
-from typing import List
 from blocknode import BlockType
 from blocktype import block_to_block_type
 from spliters import markdown_to_blocks, text_to_textnodes
@@ -84,7 +82,7 @@ class ParentNode(HTMLNode):
         # Create tags for the parent and recursives call children
         # This will respectively rerun this function or run the to_html function of the children
         # POLYMORPHISM Woaahh
-        return f'<{self.tag}{self.props_to_html()}>{"\n".join(child.to_html() for child in self.children)}</{self.tag}>'
+        return f'<{self.tag}{self.props_to_html()}>{"".join(child.to_html() for child in self.children)}</{self.tag}>'
 
 
 def text_node_to_html_node(text_node: TextNode):
@@ -110,22 +108,70 @@ def text_node_to_html_node(text_node: TextNode):
 # Takes a string text and returns a list of HTMLNode objects
 # Here I think I will use the spliter funciton I created
 def text_to_children(text, type):
-    html_node = []
-    if type == BlockType.PARA or type == BlockType.QOTE:
+    html_nodes = []
+    if type == BlockType.PARA:
         text_nodes = text_to_textnodes(" ".join(text.split("\n")))
-        html_node = list(map(text_node_to_html_node, text_nodes))
+        html_nodes = list(map(text_node_to_html_node, text_nodes))
     elif type == BlockType.HDNG:
-        heading = " ".join(text.split("\n")).lstrip("# ")
+        heading = " ".join(text.split("\n"))
         text_nodes = text_to_textnodes(heading)
-        html_node = list(map(text_node_to_html_node, text_nodes))
-    elif type == BlockType.UNDL or type == BlockType.ORDL:
-        text_nodes = []
-        for list_item in text.split("\n"):
-            parent_node = ("li", text_to_textnodes(list_item[2:]))
-            text_nodes.append(parent_node)
-        html_node = list(map(text_node_to_html_node, text_nodes))
+        html_nodes = list(map(text_node_to_html_node, text_nodes))
+    elif type == BlockType.QOTE:
+        lines = text.split("\n")
+        stripped_lines = []
+        for line in lines:
+            line = line.strip()
+            if line:
+                if line.startswith(">"):
+                    line = line[1:]
+                    if line.startswith(" "):
+                        line = line[1:]
+                        stripped_lines.append(line)
+                else:
+                    stripped_lines.append(line)
+        text_nodes = text_to_textnodes(" ".join(stripped_lines))
+        html_nodes = list(map(text_node_to_html_node, text_nodes))
+    elif type == BlockType.UNDL:
+        lines = text.split("\n")
+        stripped_lines = []
+        for line in lines:
+            line = line.strip()
+            if line:
+                if line.startswith(("-", "*")):
+                    line = line[1:]
+                    if line.startswith(" "):
+                        line = line[1:]
+                        stripped_lines.append(line)
+                else:
+                    stripped_lines.append(line)
+        nodes = []
+        for line in stripped_lines:
+            text_nodes = text_to_textnodes(line)
+            list_nodes = list(map(text_node_to_html_node, text_nodes))
+            parent_li = ParentNode("li", list_nodes)
+            nodes.append(parent_li)
+        html_nodes = nodes
+    elif type == BlockType.ORDL:
+        lines = text.split("\n")
+        stripped_lines = []
+        for line in lines:
+            line = line.strip()
+            if line:
+                line = line[2:]
+                if line.startswith(" "):
+                    line = line[1:]
+                    stripped_lines.append(line)
+            else:
+                stripped_lines.append(line)
+        nodes = []
+        for line in stripped_lines:
+            text_nodes = text_to_textnodes(line)
+            list_nodes = list(map(text_node_to_html_node, text_nodes))
+            parent_li = ParentNode("li", list_nodes)
+            nodes.append(parent_li)
+        html_nodes = nodes
 
-    return html_node
+    return html_nodes
 
 
 
@@ -146,24 +192,26 @@ def markdown_to_html_node(markdown):
                         count += 1
                     else:
                         break
-                nodes = text_to_children(block, BlockType.PARA)
+                block = block.lstrip("# ")
+                nodes = text_to_children(block, BlockType.HDNG)
                 parent_h = ParentNode(f"h{count}", nodes)
                 children_nodes.append(parent_h)
             case BlockType.QOTE:
-                nodes = text_to_children(block, BlockType.PARA)
+                nodes = text_to_children(block, BlockType.QOTE)
                 parent_q = ParentNode('blockquote', nodes)
                 children_nodes.append(parent_q)
             case BlockType.CODE:
-                text_node = TextNode(block, TextType.CODE)
+                block = block[3:-3]
+                text_node = TextNode(block.lstrip(), TextType.CODE)
                 nodes = text_node_to_html_node(text_node)
-                parent_c = ParentNode("<pre>", [nodes])
+                parent_c = ParentNode("pre", [nodes])
                 children_nodes.append(parent_c)
             case BlockType.UNDL:
-                nodes = text_to_children(block, BlockType.PARA)
+                nodes = text_to_children(block, BlockType.UNDL)
                 parent_u = ParentNode('ul', nodes)
                 children_nodes.append(parent_u)
             case BlockType.ORDL:
-                nodes = text_to_children(block, BlockType.PARA)
+                nodes = text_to_children(block, BlockType.ORDL)
                 parent_u = ParentNode('ol', nodes)
                 children_nodes.append(parent_u)
     parent_block = ParentNode("div", children_nodes)
