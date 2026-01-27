@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 import shutil
 from htmlnode import markdown_to_html_node
@@ -22,7 +23,7 @@ def copy_contents(source_dir, dest_dir):
             os.mkdir(new_dir)
             copy_contents(path_to_item, new_dir)
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path, 'r') as f:
         markdown_file = f.read()
@@ -35,32 +36,41 @@ def generate_page(from_path, template_path, dest_path):
     page_title = extract_title(markdown_file)
     full_html_page = template_file.replace("{{ Title }}", page_title)
     full_html_page = full_html_page.replace("{{ Content }}", content)
+    full_html_page = full_html_page.replace('href="/', f'href="{basepath}')
+    full_html_page = full_html_page.replace('src="/', f'src="{basepath}')
     file_directory = os.path.dirname(dest_path)
     os.makedirs(file_directory, exist_ok=True)
     with open(dest_path, 'w') as f:
         f.write(full_html_page)
         f.close()
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     for item in os.listdir(dir_path_content):
         path_to_content_item = os.path.join(dir_path_content, item)
         path_to_dest_item = Path(dest_dir_path, item)
         if os.path.isfile(path_to_content_item):
-            generate_page(path_to_content_item, template_path, path_to_dest_item.with_suffix(".html"))
+            generate_page(path_to_content_item, template_path, path_to_dest_item.with_suffix(".html"), basepath)
         else:
-            generate_pages_recursive(path_to_content_item, template_path, path_to_dest_item)
+            generate_pages_recursive(path_to_content_item, template_path, path_to_dest_item, basepath)
 
 def main():
     source_dir = "static"
-    destination_dir = "public"
+    destination_dir = "docs"
+
+    # Grab the first cli argument
+    basepath = "/"
+    if len(sys.argv) > 1:
+        basepath = sys.argv[0]
+
     try:
         copy_contents(source_dir, destination_dir)
     except Exception as e:
         print(e)
 
     try:
-        generate_pages_recursive("content", "template.html", "public")
+        generate_pages_recursive("content", "template.html", "docs", basepath)
     except Exception as e:
         print(e)
+
 
 main()

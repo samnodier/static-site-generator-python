@@ -7,6 +7,8 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
     for node in old_nodes:
         # grab the node text to use throughout the function without modifying the node
         node_text = node.text
+        # it's important to continue because if we find a node that's not a text node
+        # it will need to be appended to the nodes in the next if statement
         if not node_text:
             continue
         if node.text_type is not TextType.TEXT:
