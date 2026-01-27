@@ -58,7 +58,13 @@ class TestSpliters(unittest.TestCase):
 
     def test_text_to_textnodes(self):
         text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        text2 = "`555-555-5555`"
+        text3 = '**"Váya márië."**'
+        text4 = "_An unpopular opinion, I know._"
         new_nodes = text_to_textnodes(text)
+        new_nodes2 = text_to_textnodes(text2)
+        new_nodes3 = text_to_textnodes(text3)
+        new_nodes4 = text_to_textnodes(text4)
         self.assertListEqual(
             [
                 TextNode("This is ", TextType.TEXT),
@@ -73,6 +79,24 @@ class TestSpliters(unittest.TestCase):
                 TextNode("link", TextType.LINK, "https://boot.dev"),
             ],
             new_nodes
+        )
+        self.assertListEqual(
+            new_nodes2,
+            [
+                TextNode("555-555-5555", TextType.CODE)
+            ]
+        )
+        self.assertListEqual(
+            new_nodes3,
+            [
+                TextNode('"Váya márië."', TextType.BOLD)
+            ]
+        )
+        self.assertListEqual(
+            new_nodes4,
+            [
+                TextNode("An unpopular opinion, I know.", TextType.ITALIC)
+            ]
         )
 
     def test_markdown_to_blocks(self):

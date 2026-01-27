@@ -8,7 +8,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         # grab the node text to use throughout the function without modifying the node
         node_text = node.text
         if not node_text:
-            break
+            continue
         if node.text_type is not TextType.TEXT:
             new_nodes.append(node)
         else:
@@ -32,7 +32,7 @@ def split_nodes_image(old_nodes):
         node_text = node.text
         # if the node text is empty
         if not node_text:
-            break
+            continue
         if node.text_type is not TextType.TEXT:
             new_nodes.append(node)
         else:
@@ -62,8 +62,9 @@ def split_nodes_link(old_nodes):
     for node in old_nodes:
         # grab the node text to use throughout the function without modifying the node
         node_text = node.text
+        # if the text node is empty, do nothing
         if not node_text:
-            break
+            continue
         if node.text_type is not TextType.TEXT:
             new_nodes.append(node)
         else:

@@ -187,11 +187,30 @@ class TestHTMLNode(unittest.TestCase):
             print('hello')```
 
         """
+
+        contactmd = """
+
+            # Contact the Author
+
+            [< Back Home](/)
+
+            Give me a call anytime to chat about Tolkien!
+
+            `555-555-5555`
+
+            **"Váya márië."**
+        """
         node = markdown_to_html_node(md)
+        contactnode = markdown_to_html_node(contactmd)
         html = node.to_html()
+        contacthtml = contactnode.to_html()
         self.assertEqual(
             html,
             """<div><h1>The Main Title</h1><p>This is a paragraph with <b>bold</b> text and a <a href="https://google.com">link</a>.</p><ul><li>Item 1</li><li>Item 2</li></ul><pre><code>python\nprint('hello')</code></pre></div>"""
+        )
+        self.assertEqual(
+            contacthtml,
+            """<div><h1>Contact the Author</h1><p><a href="/">< Back Home</a></p><p>Give me a call anytime to chat about Tolkien!</p><p><code>555-555-5555</code></p><p><b>"Váya márië."</b></p></div>"""
         )
 
 if __name__ == "__main__":

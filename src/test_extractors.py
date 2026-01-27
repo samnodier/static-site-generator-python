@@ -1,6 +1,6 @@
 import unittest
 
-from extractors import extract_markdown_images, extract_markdown_links
+from extractors import extract_markdown_images, extract_markdown_links, extract_title
 
 class TestExtractors(unittest.TestCase):
     def test_extract_markdown_images(self):
@@ -22,6 +22,17 @@ class TestExtractors(unittest.TestCase):
         )
         self.assertEqual([("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")],  matches)
         self.assertEqual([("b", "u2")], matches2)
+
+    def test_extract_title(self):
+        md = "# This is a header"
+        md2 = "#This is header with no space"
+        md3 = "#        This is header with multiple spaces"
+        h1 = extract_title(md)
+        h21 = extract_title(md2)
+        h31 = extract_title(md3)
+        self.assertEqual(h1, "This is a header")
+        self.assertEqual(h21, "This is header with no space")
+        self.assertEqual(h31, "This is header with multiple spaces")
 
 if __name__ == "__main__":
     unittest.main()
