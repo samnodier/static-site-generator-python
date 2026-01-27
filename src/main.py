@@ -60,7 +60,7 @@ def main():
     # Grab the first cli argument
     basepath = "/"
     if len(sys.argv) > 1:
-        basepath = sys.argv[0]
+        basepath = sys.argv[1]
 
     try:
         copy_contents(source_dir, destination_dir)
